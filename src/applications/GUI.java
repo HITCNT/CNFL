@@ -3,11 +3,13 @@ package applications;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
 public class GUI {
@@ -20,8 +22,11 @@ public class GUI {
   private JPanel uploadJPanel;
   private JPanel informationJPanel;
   private JScrollPane listJScrollPane;
+  
+  
 
-
+  
+  
   public GUI() {
     initJFrame();
   }
@@ -77,15 +82,67 @@ public class GUI {
   }
   
   private void initDownloadJPanel() {
+    JPanel searchJPanel=new JPanel();
+    JScrollPane searchListJScrollPane=new JScrollPane();
+    JPanel downloadingJPanel=new JPanel();
+    JPanel filePathJPanel=new JPanel();
+    JTextField searchJTextField=new JTextField();
+    JTextField fileNameJTextField=new JTextField();
+    JTextField filePathJTextField=new JTextField();
+    
     downloadJPanel=new JPanel();
+    downloadJPanel.setLayout(new BorderLayout(5,5));
+    
+    searchJPanel.setLayout(new BorderLayout(5,5));
+    searchJPanel.add(searchJTextField,BorderLayout.CENTER);
+    searchJPanel.add(new JButton("搜索"),BorderLayout.EAST);
+    
+    fileNameJTextField.setPreferredSize(new Dimension(200,30));
+    
+    filePathJTextField.setPreferredSize(new Dimension(200,30));
+    
+    filePathJPanel.add(fileNameJTextField);
+    filePathJPanel.add(filePathJTextField);
+    
+    downloadingJPanel.setLayout(new BorderLayout(5,5));
+    downloadingJPanel.add(filePathJPanel,BorderLayout.CENTER);
+    downloadingJPanel.add(new JButton("下载"),BorderLayout.EAST);
+    
+    downloadJPanel.add(searchListJScrollPane,BorderLayout.CENTER);
+    downloadJPanel.add(searchJPanel,BorderLayout.NORTH);
+    downloadJPanel.add(downloadingJPanel,BorderLayout.SOUTH);
+    
   }
   
   private void initUploadJPanel() {
+    JPanel filePathJPanel=new JPanel();
+    JScrollPane updatedListJScrollPane=new JScrollPane();
+    JTextField searchJTextField=new JTextField();
+    JPanel buttonJPanel=new JPanel();
+    JButton selectJButton=new JButton("浏览");
+    JButton uploadJButton=new JButton("上传");
+    
     uploadJPanel=new JPanel();
+    uploadJPanel.setLayout(new BorderLayout(5,5));
+    
+    searchJTextField.setPreferredSize(new Dimension(600,30));
+    
+    buttonJPanel.setLayout(new BorderLayout(5,5));
+    buttonJPanel.add(selectJButton,BorderLayout.WEST);
+    buttonJPanel.add(uploadJButton,BorderLayout.EAST);
+    
+    filePathJPanel.setLayout(new BorderLayout(5,5));
+    filePathJPanel.add(searchJTextField,BorderLayout.CENTER);
+    filePathJPanel.add(buttonJPanel,BorderLayout.EAST);
+    
+    uploadJPanel.add(updatedListJScrollPane,BorderLayout.CENTER);
+    uploadJPanel.add(filePathJPanel,BorderLayout.NORTH);
+    
   }
   
   private void initinformationJPanel() {
     informationJPanel=new JPanel();
+    informationJPanel.add(new JLabel("本页为软件信息页，没有操作内容"));
   }
   
   private void initListJScrollPane() {
