@@ -43,10 +43,8 @@ public interface Clientable {
   /**
    * 分享目标文件。
    * 应当启动分享并持续修改传输列表，应当修改当前已分享表，若本地文件未存在则应当报错。
-   * @param fileData 文件描述数据
-   * @param fileName 本地存储文件名
    * @param filePath 本地存储文件路径
    * @return 是否成功启动上传
    */
-  public boolean upload(FileData fileData,String fileName,String filePath);
+  public boolean upload(String filePath);
 }
