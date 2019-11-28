@@ -5,6 +5,12 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -29,7 +35,6 @@ import client.Clientable;
 import dataStruct.FileData;
 import dataStruct.TotalData;
 import dataStruct.TransferData;
-import dataStruct.TransferState;
 import server.Serverable;
 
 public class GUI {
@@ -53,28 +58,55 @@ public class GUI {
 
   public GUI() {
     initProgram();
-    uploadJList=new JList<FileData>();
-    transferJList=new JList<TransferData>();
+    uploadJList = new JList<FileData>();
+    transferJList = new JList<TransferData>();
     initJFrame();
-    if(server!=null) {
+    if (server != null) {
       server.run();
     }
-    Timer refreshTimer=new Timer();
+    Timer refreshTimer = new Timer();
     refreshTimer.schedule(new TimerTask() {
-      
+
       @Override
       public void run() {
-        uploadJList.setListData(totalData.getSharedList().toArray(new FileData[1]));
-        transferJList.setListData(totalData.getTransferList().toArray(new TransferData[1]));
+        uploadJList
+            .setListData(totalData.getSharedList().toArray(new FileData[1]));
+        transferJList.setListData(
+            totalData.getTransferList().toArray(new TransferData[1]));
       }
     }, 0, 1000);
     mainJFrame.setVisible(true);
   }
 
   private byte[] getRandomID() {
-    Random r = new Random();
     byte[] id = new byte[20];
-    r.nextBytes(id);
+    File file = new File("src/nodeID.txt");
+    if (!file.exists()) {
+      try {
+        file.createNewFile();
+        FileWriter fw = new FileWriter(file, false);
+        Random r = new Random();
+        r.nextBytes(id);
+        fw.write(conver16HexStr(id));
+        fw.close();
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    } else {
+      try {
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        String idX = reader.readLine();
+        id=conver16HexToByte(idX);
+        reader.close();
+      } catch (FileNotFoundException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+    }
     return id;
   }
 
@@ -88,26 +120,42 @@ public class GUI {
     return result.toString().toUpperCase();
   }
 
+  public static byte[] conver16HexToByte(String hex16Str) {
+    char[] c = hex16Str.toCharArray();
+    byte[] b = new byte[c.length / 2];
+    for (int i = 0; i < b.length; i++) {
+        int pos = i * 2;
+        b[i] = (byte) ("0123456789ABCDEF".indexOf(c[pos]) << 4 | "0123456789ABCDEF".indexOf(c[pos + 1]));
+    }
+    return b;
+}
+  
   private void initProgram() {
-    List<TransferData> initTransferList=new ArrayList<TransferData>();
-    List<FileData> initFileList=new ArrayList<FileData>();
-    
-//    initTransferList.add(new TransferData(TransferState.TransferDownload, new FileData("1.txt", new byte[20],123)));
-//    initFileList.add(new FileData("1.txt", new byte[20],123));
-//    
-//    Timer refreshTimer=new Timer();
-//    refreshTimer.schedule(new TimerTask() {
-//      
-//      @Override
-//      public void run() {
-//        initFileList.add(new FileData("1.txt", new byte[20],123));
-//        initTransferList.add(new TransferData(TransferState.TransferDownload, new FileData("1.txt", new byte[20],123)));
-//      }
-//    }, 0, 500);
-     
-    
-    
-    totalData = new TotalData(getRandomID(), initTransferList,initFileList);
+    List<TransferData> initTransferList = new ArrayList<TransferData>();
+    List<FileData> initFileList = new ArrayList<FileData>();
+
+    // initTransferList.add(new
+    // TransferData(TransferState.TransferDownload, new
+    // FileData("1.txt", new byte[20],123)));
+    // initFileList.add(new FileData("1.txt", new
+    // byte[20],123));
+    //
+    // Timer refreshTimer=new Timer();
+    // refreshTimer.schedule(new TimerTask() {
+    //
+    // @Override
+    // public void run() {
+    // initFileList.add(new FileData("1.txt", new
+    // byte[20],123));
+    // initTransferList.add(new
+    // TransferData(TransferState.TransferDownload, new
+    // FileData("1.txt", new byte[20],123)));
+    // }
+    // }, 0, 500);
+
+
+
+    totalData = new TotalData(getRandomID(), initTransferList, initFileList);
     server = Serverable.getServer(totalData);
     client = Clientable.getClient(totalData);
   }
@@ -156,8 +204,8 @@ public class GUI {
 
     initListJScrollPane();
 
-    
-    
+
+
     listJPanel.add(new JLabel("传输列表"), BorderLayout.NORTH);
     listJPanel.add(listJScrollPane, BorderLayout.CENTER);
 
@@ -178,6 +226,9 @@ public class GUI {
     JButton downloadJButton = new JButton("下载");
 
     downloadJPanel = new JPanel();
+    downloadJPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+
     downloadJPanel.setLayout(new BorderLayout(5, 5));
 
     searchJPanel.setLayout(new BorderLayout(5, 5));
@@ -187,12 +238,10 @@ public class GUI {
 
       @Override
       public void actionPerformed(ActionEvent e) {
-     // TODO 重写FileData的toString
         List<FileData> result = new ArrayList<FileData>();
-        if(client!=null) {
-          result =
-              client.searchFile(searchJTextField.getText());
-        }else {
+        if (client != null) {
+          result = client.searchFile(searchJTextField.getText());
+        } else {
           for (int i = 1; i < 100; i++) {
             result.add(new FileData(i + ".txt", new byte[20], 123));
           }
@@ -244,11 +293,10 @@ public class GUI {
           JOptionPane.showMessageDialog(null, "请填写存储文件路径");
           return;
         }
-        boolean result=false;
-        if(client!=null) {
-          result=client.download(aimedSearchFile,
-              fileNameJTextField.getText(),
-              filePathJTextField.getText());
+        boolean result = false;
+        if (client != null) {
+          result = client.download(aimedSearchFile,
+              fileNameJTextField.getText(), filePathJTextField.getText());
         }
         if (result) {
 
@@ -297,14 +345,24 @@ public class GUI {
     JPanel filePathJPanel = new JPanel();
     JScrollPane updatedListJScrollPane = new JScrollPane();
     JTextField uploadJTextField = new JTextField();
+    JTextField nameJTextField = new JTextField();
     JPanel buttonJPanel = new JPanel();
+    JPanel textJPanel = new JPanel();
+    JPanel nameJPanel = new JPanel();
+    JPanel pathJPanel = new JPanel();
     JButton selectJButton = new JButton("浏览");
     JButton uploadJButton = new JButton("上传");
 
+
+
     uploadJPanel = new JPanel();
+
+    uploadJPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
     uploadJPanel.setLayout(new BorderLayout(5, 5));
 
-    uploadJTextField.setPreferredSize(new Dimension(600, 30));
+    uploadJTextField.setPreferredSize(new Dimension(120, 30));
+    nameJTextField.setPreferredSize(new Dimension(120, 30));
 
     selectJButton.addActionListener(new ActionListener() {
 
@@ -315,6 +373,7 @@ public class GUI {
         switch (jfc.showOpenDialog(null)) {
           case JFileChooser.APPROVE_OPTION:
             uploadJTextField.setText(jfc.getSelectedFile().getPath());
+            nameJTextField.setText(jfc.getSelectedFile().getName());
             break;
           default:
             break;
@@ -330,9 +389,14 @@ public class GUI {
           JOptionPane.showMessageDialog(null, "请选择待共享文件");
           return;
         }
+        if (uploadJTextField.getText().equals("")) {
+          JOptionPane.showMessageDialog(null, "请填写文件名");
+          return;
+        }
         boolean result = false;
-        if(client!=null) {
-          result=client.upload(uploadJTextField.getText());
+        if (client != null) {
+          result = client.upload(nameJTextField.getText(),
+              uploadJTextField.getText());
         }
         if (result) {
 
@@ -342,16 +406,28 @@ public class GUI {
       }
     });
 
+    nameJPanel.setLayout(new BorderLayout(5, 5));
+    nameJPanel.add(new JLabel("共享文件名"), BorderLayout.WEST);
+    nameJPanel.add(nameJTextField, BorderLayout.CENTER);
+
+    pathJPanel.setLayout(new BorderLayout(5, 5));
+    pathJPanel.add(new JLabel("共享文件路径"), BorderLayout.WEST);
+    pathJPanel.add(uploadJTextField, BorderLayout.CENTER);
+
+    textJPanel.setLayout(new BorderLayout(5, 5));
+    textJPanel.add(nameJPanel, BorderLayout.WEST);
+    textJPanel.add(pathJPanel, BorderLayout.EAST);
+
     buttonJPanel.setLayout(new BorderLayout(5, 5));
     buttonJPanel.add(selectJButton, BorderLayout.WEST);
     buttonJPanel.add(uploadJButton, BorderLayout.EAST);
 
     filePathJPanel.setLayout(new BorderLayout(5, 5));
-    filePathJPanel.add(uploadJTextField, BorderLayout.CENTER);
+    filePathJPanel.add(textJPanel, BorderLayout.CENTER);
     filePathJPanel.add(buttonJPanel, BorderLayout.EAST);
 
     updatedListJScrollPane.setViewportView(uploadJList);
-    
+
     uploadJPanel.add(updatedListJScrollPane, BorderLayout.CENTER);
     uploadJPanel.add(filePathJPanel, BorderLayout.NORTH);
 
@@ -359,6 +435,8 @@ public class GUI {
 
   private void initinformationJPanel() {
     informationJPanel = new JPanel();
+    informationJPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
     informationJPanel.setLayout(new GridLayout(20, 1));
     informationJPanel
         .add(new JLabel("本节点ID：" + conver16HexStr(totalData.getId())));
