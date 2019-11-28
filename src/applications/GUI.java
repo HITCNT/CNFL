@@ -8,8 +8,6 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -29,7 +27,6 @@ import client.Clientable;
 import dataStruct.FileData;
 import dataStruct.TotalData;
 import dataStruct.TransferData;
-import dataStruct.TransferState;
 import server.Serverable;
 
 public class GUI {
@@ -42,8 +39,6 @@ public class GUI {
   private JPanel uploadJPanel;
   private JPanel informationJPanel;
   private JScrollPane listJScrollPane;
-  private JList<FileData> uploadJList;
-  private JList<TransferData> transferJList;
 
   private TotalData totalData;
   private Serverable server;
@@ -53,21 +48,10 @@ public class GUI {
 
   public GUI() {
     initProgram();
-    uploadJList=new JList<FileData>();
-    transferJList=new JList<TransferData>();
     initJFrame();
     if(server!=null) {
       server.run();
     }
-    Timer refreshTimer=new Timer();
-    refreshTimer.schedule(new TimerTask() {
-      
-      @Override
-      public void run() {
-        uploadJList.setListData(totalData.getSharedList().toArray(new FileData[1]));
-        transferJList.setListData(totalData.getTransferList().toArray(new TransferData[1]));
-      }
-    }, 0, 1000);
     mainJFrame.setVisible(true);
   }
 
@@ -89,25 +73,7 @@ public class GUI {
   }
 
   private void initProgram() {
-    List<TransferData> initTransferList=new ArrayList<TransferData>();
-    List<FileData> initFileList=new ArrayList<FileData>();
-    
-//    initTransferList.add(new TransferData(TransferState.TransferDownload, new FileData("1.txt", new byte[20],123)));
-//    initFileList.add(new FileData("1.txt", new byte[20],123));
-//    
-//    Timer refreshTimer=new Timer();
-//    refreshTimer.schedule(new TimerTask() {
-//      
-//      @Override
-//      public void run() {
-//        initFileList.add(new FileData("1.txt", new byte[20],123));
-//        initTransferList.add(new TransferData(TransferState.TransferDownload, new FileData("1.txt", new byte[20],123)));
-//      }
-//    }, 0, 500);
-    
-    
-    
-    totalData = new TotalData(getRandomID(), initTransferList,initFileList);
+    totalData = new TotalData(getRandomID(), new ArrayList<TransferData>());
     server = Serverable.getServer(totalData);
     client = Clientable.getClient(totalData);
   }
@@ -156,8 +122,6 @@ public class GUI {
 
     initListJScrollPane();
 
-    
-    
     listJPanel.add(new JLabel("´«ÊäÁÐ±í"), BorderLayout.NORTH);
     listJPanel.add(listJScrollPane, BorderLayout.CENTER);
 
@@ -197,7 +161,7 @@ public class GUI {
             result.add(new FileData(i + ".txt", new byte[20], 123));
           }
         }
-        searchJList.setListData(result.toArray(new FileData[1]));
+        searchJList.setListData(result.toArray(new FileData[1]));;
       }
     });
 
@@ -350,8 +314,6 @@ public class GUI {
     filePathJPanel.add(uploadJTextField, BorderLayout.CENTER);
     filePathJPanel.add(buttonJPanel, BorderLayout.EAST);
 
-    updatedListJScrollPane.setViewportView(uploadJList);
-    
     uploadJPanel.add(updatedListJScrollPane, BorderLayout.CENTER);
     uploadJPanel.add(filePathJPanel, BorderLayout.NORTH);
 
@@ -373,7 +335,6 @@ public class GUI {
     listJScrollPane = new JScrollPane();
     listJScrollPane.setPreferredSize(new Dimension(200, 600));
 
-    listJScrollPane.setViewportView(transferJList);
   }
 
 }
