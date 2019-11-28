@@ -104,7 +104,7 @@ public class GUI {
 //        initTransferList.add(new TransferData(TransferState.TransferDownload, new FileData("1.txt", new byte[20],123)));
 //      }
 //    }, 0, 500);
-    
+     
     
     
     totalData = new TotalData(getRandomID(), initTransferList,initFileList);
