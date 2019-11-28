@@ -80,11 +80,16 @@ public class GUI {
 
   private byte[] getRandomID() {
     byte[] id = new byte[20];
-    File file = new File("src/nodeID.txt");
+    File data=new File("data");
+    if(!data.exists()) {
+      data.mkdir();
+    }
+    
+    File file = new File("data/nodeID.txt");
     if (!file.exists()) {
       try {
         file.createNewFile();
-        FileWriter fw = new FileWriter(file, false);
+        FileWriter fw = new FileWriter(file, false); 
         Random r = new Random();
         r.nextBytes(id);
         fw.write(conver16HexStr(id));
