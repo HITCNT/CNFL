@@ -4,6 +4,7 @@
 package server;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -13,6 +14,7 @@ import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import dataStruct.FileData;
 import dataStruct.InternetNode;
@@ -46,7 +48,7 @@ public class Server implements Serverable{
     id = totalData.getId();
     //初始化公网IP节点
     int distance = distance(id,new byte[id.length]);
-    InternetNode pubNode = new InternetNode(new byte[4],"128.16.1.1","80"); //需修改
+    InternetNode pubNode = new InternetNode(new byte[4],"49.232.146.5","8080"); //需修改
     List<InternetNode> nodeList = new ArrayList<InternetNode>();
     nodeList.add(pubNode);
     this.totalData.getK_bucket().put(distance, nodeList);
@@ -79,6 +81,7 @@ public class Server implements Serverable{
   public void run() {
     // TODO Auto-generated method stub
     try {
+      this.upData();
       while (true) {
         buffer.clear();
         SocketAddress socketAddress = channel.receive(buffer);
@@ -99,22 +102,119 @@ public class Server implements Serverable{
           reply1(socketAddress);
         } else if (order.equals("Find_Node")) {
           reply2(socketAddress,infor);
-        } else if (order.equals("Find_value")) {
+        } else if (order.equals("Find_Value")) {
           reply3(socketAddress,infor);
         } else if (order.equals("Store")) {
           reply4(socketAddress,infor);
         } else if (order.equals("Load")) {
           reply5(socketAddress,infor);
         } else if (order.equals("Node")) {
-          reply6(socketAddress,infor);
+          reply6(infor);
         }
 
-
+        TimeTask tt = new TimeTask(this);
       }
     }catch (Exception e) {
       e.printStackTrace();
     }
 
+  }
+
+  public  void upData() {
+    int k = 5;
+    Set<Integer> distance = this.totalData.getK_bucket().keySet();
+
+
+    if (distance == null) {
+      for (int i = 1; i <= k; i++) {
+        updata1(i);
+      }
+    } else {
+      int count = 1;
+      while (count <= 5) {
+        if (distance.contains(count)) {
+          List<InternetNode> nodes = this.totalData.getK_bucket().get(count);
+          InternetNode node = nodes.get(0);
+          byte[] testid = new byte[4];
+          System.arraycopy(this.id, 0, testid, 0, 4);
+
+          byte[] cmd = new byte[12];
+          System.arraycopy("Find_Node".getBytes(), 0, cmd, 0, "Find_Node".getBytes().length);
+
+          byte[] temp = new byte[16];
+          ByteBuffer buffer = ByteBuffer.wrap(temp);
+
+          buffer.put(cmd);
+          buffer.put(testid);
+
+          byte[] message = buffer.array();
+          SocketAddress socketaddress = new InetSocketAddress(node.getIp(), 8080);
+          try {
+            ByteBuffer buffer1 = ByteBuffer.allocate(MAXDATASIZE);
+            buffer1.put(message);
+            buffer1.flip();
+            this.channel.send(buffer1, socketaddress);
+          }catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("send_mess出错");
+          }
+
+          ByteBuffer buffer2 = ByteBuffer.allocate(MAXDATASIZE);
+          try {
+            this.channel.configureBlocking(true);//设置阻塞
+            SocketAddress socketAddress = channel.receive(buffer2);
+            byte[] req = getReq(socketAddress);
+
+            reply6(req);
+
+
+          } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
+        } else {
+          updata1(count);
+        }
+
+        count++;
+      }
+    }
+  }
+
+
+  /**
+   * 
+   * @param distance
+   */
+  private void updata1(int distance) {
+    byte[] testid = new byte[4];
+    for (int j = 0; j < 4; j++) {
+      if (j < distance) {
+        testid[j] = (byte)(this.id[j]^1);
+      }
+      testid[j] = this.id[j];
+    }
+
+    byte[] cmd = new byte[12];
+    System.arraycopy("Find_Node".getBytes(), 0, cmd, 0, "Find_Node".getBytes().length);
+
+    byte[] temp = new byte[16];
+    ByteBuffer buffer = ByteBuffer.wrap(temp);
+
+    buffer.put(cmd);
+    buffer.put(testid);
+
+    byte[] message = buffer.array();
+    SocketAddress socketaddress = new InetSocketAddress("49.232.146.5", 8080);
+    try {
+      ByteBuffer buffer1 = ByteBuffer.allocate(1024);
+      buffer1.put(message);
+      buffer1.flip();
+      this.channel.send(buffer1, socketaddress);
+    }catch (Exception e) {
+      e.printStackTrace();
+      System.out.println("send_mess出错");
+    }
   }
 
   /**
@@ -152,9 +252,18 @@ public class Server implements Serverable{
 
     byte[] com = new byte[12];
     System.arraycopy("Alive".getBytes(), 0, com, 0, "Alive".getBytes().length);
+    byte[] node = setNode(this.id,addr.getHostAddress().getBytes(),"8080".getBytes());
+
+    byte[] temp = new byte[32];
+    ByteBuffer buffer = ByteBuffer.wrap(temp);
+    buffer.put(com);
+    buffer.put(node);
+
+    byte[] message = buffer.array();
+
     try {
       ByteBuffer buffer1 = ByteBuffer.allocate(1024);
-      buffer1.put(com);
+      buffer1.put(message);
       buffer1.flip();
       this.channel.send(buffer1, socketAddress);
     }catch (Exception e) {
@@ -176,7 +285,7 @@ public class Server implements Serverable{
       byte[] ip = addr.getHostAddress().getBytes();
       byte[] port = "8080".getBytes();
 
-      byte[] message = setmessage(id, ip, port);
+      byte[] message = setNode(id, ip, port);
 
       try {
         ByteBuffer buffer1 = ByteBuffer.allocate(1024);
@@ -193,7 +302,7 @@ public class Server implements Serverable{
       if (bucket != null) {
         for (InternetNode node : bucket) {
           if (Arrays.equals(node.getId(), infor)) {
-            byte[] message = setmessage(node.getId(), node.getIp().getBytes(), node.getPort().getBytes());
+            byte[] message = setNode(node.getId(), node.getIp().getBytes(), node.getPort().getBytes());
             try {
               ByteBuffer buffer1 = ByteBuffer.allocate(1024);
               buffer1.put(message);
@@ -217,6 +326,9 @@ public class Server implements Serverable{
       if (bucket == null) {
         int find = distance - 1;
         while (true) {
+          if (find < 0) {
+            break;
+          }
           List<InternetNode> nodes = this.totalData.getK_bucket().get(find);
           if (nodes == null) {
             find = find - 1;
@@ -224,7 +336,7 @@ public class Server implements Serverable{
           }
 
           for (InternetNode node : nodes) {
-            byte[] message = setmessage(node.getId(), node.getIp().getBytes(), node.getPort().getBytes());
+            byte[] message = setNode(node.getId(), node.getIp().getBytes(), node.getPort().getBytes());
             buffer.put(message);
             count++;
 
@@ -236,6 +348,7 @@ public class Server implements Serverable{
           if (count == k) {
             break;
           }
+          find = find - 1;
         }
 
         byte[] message = buffer.array();
@@ -265,7 +378,7 @@ public class Server implements Serverable{
    * @param port
    * @return
    */
-  private byte[] setmessage(byte[] id ,byte[] ip, byte[] port) {
+  private byte[] setNode(byte[] id ,byte[] ip, byte[] port) {
     byte[] com = new byte[12];
     byte[] id1 = new byte[4];
     byte[] ip1 = new byte[15];
@@ -289,15 +402,64 @@ public class Server implements Serverable{
   }
 
   /**
+   * 设置FileData数据包.Filehash4字节
+   * @param Filename
+   * @param Filehash
+   * @param Filelength
+   * @return
+   */
+  private byte[] setFileData(String Filename,byte[] Filehash, int Filelength) {
+    byte[] filename = new byte[12];
+    byte[] filehash = new byte[4];
+    byte[] filelength = new byte[4];
+
+    System.arraycopy(Filename.getBytes(), 0, filename, 0, Filename.getBytes().length);
+    System.arraycopy(Filehash, 0, filehash, 0, Filehash.length);
+    System.arraycopy(intToBytearray(Filelength), 0 , filelength, 0, 4);
+
+    byte[] temp = new byte[20];
+    ByteBuffer buffer = ByteBuffer.wrap(temp);
+    buffer.put(filename);
+    buffer.put(filehash);
+    buffer.put(filelength);
+
+    byte[] message = buffer.array();
+
+    return message;
+  }
+
+  /**
    * 回复Find_Value
    * @param socketAddress
    * @param infor
    */
   private void reply3(SocketAddress socketAddress, byte[] infor) {
-    FileData file = this.totalData.getFile().get(infor);
+    String filename = new String(infor);
+
+    int sum = 0;
+    for (int i = 0; i < filename.length(); i++) {
+      int temp = filename.charAt(i);
+      sum += temp;
+    }
+
+    byte[] filehash = intToBytearray(sum);
+
+    FileData file = this.totalData.getFile().get(filehash);
+    byte[] node = setNode(id, addr.getHostAddress().getBytes(), "8080".getBytes());
 
     if (file != null) {
-      byte[] message = setmessage(id, addr.getHostAddress().getBytes(), "8080".getBytes());
+
+      byte[] filedata = setFileData(file.getFileName(),file.getFileHash(),file.getFileLength());
+
+
+      byte[] temp = new byte[55];
+      ByteBuffer buffer = ByteBuffer.wrap(temp);
+      buffer.put(filedata);
+      buffer.put(node);
+
+      byte[] message = buffer.array();
+
+
       try {
         ByteBuffer buffer1 = ByteBuffer.allocate(1024);
         buffer1.put(message);
@@ -316,7 +478,38 @@ public class Server implements Serverable{
      * 找不到对应值的节点，待时处理
      */
     if (file == null) {
-      int distance = distance(this.id,infor);
+      String sfilename = new String(filename);
+      Set<byte[]> files = this.totalData.getFile().keySet();
+      if (files != null) {
+        for (byte[] f : files) {
+          String name = new String(f);
+          if (name.contains(sfilename)) {
+            FileData f1 = this.totalData.getFile().get(f);
+            byte[] filedata = setFileData(f1.getFileName(),f1.getFileHash(),f1.getFileLength());
+
+            byte[] temp = new byte[55];
+            ByteBuffer buffer = ByteBuffer.wrap(temp);
+            buffer.put(node);
+            buffer.put(filedata);
+
+            byte[] message = buffer.array();
+
+
+            try {
+              ByteBuffer buffer1 = ByteBuffer.allocate(1024);
+              buffer1.put(message);
+              buffer1.flip();
+              this.channel.send(buffer1, socketAddress);
+
+            }catch (Exception e) {
+              e.printStackTrace();
+              System.out.println("send_mess出错");
+            }
+          }
+        }
+      }
+
+      int distance = distance(this.id,filehash);
       int count = 0;
 
       byte[] temp = new byte[70];
@@ -324,14 +517,17 @@ public class Server implements Serverable{
 
       int find = (int)(Math.log(distance)/Math.log(2.0)) + 1;
       while (true) {
+        if (find < 0) {
+          break;
+        }
         List<InternetNode> nodes = this.totalData.getK_bucket().get(find);
         if (nodes == null) {
           find = find - 1;
           continue;
         }
 
-        for (InternetNode node : nodes) {
-          byte[] message = setmessage(node.getId(), node.getIp().getBytes(), node.getPort().getBytes());
+        for (InternetNode n : nodes) {
+          byte[] message = setNode(n.getId(), n.getIp().getBytes(), n.getPort().getBytes());
           buffer.put(message);
           count++;
 
@@ -343,6 +539,8 @@ public class Server implements Serverable{
         if (count == k) {
           break;
         }
+
+        find = find - 1;
       }
 
       byte[] message = buffer.array();
@@ -358,6 +556,24 @@ public class Server implements Serverable{
         }
       }
     }
+  }
+
+
+
+  /**
+   * 整型转Byte数组
+   * @param n
+   * @return
+   */
+  private byte[] intToBytearray(int n) {
+    byte[] result = new byte[4];
+
+    result[3] = (byte)(n >> 24);
+    result[2] = (byte)(n >> 16);
+    result[1] = (byte)(n >> 8);
+    result[0] = (byte)n;
+
+    return result;
   }
 
 
@@ -386,7 +602,10 @@ public class Server implements Serverable{
     }
 
     FileData file = new FileData(new String(filename),filehash,length);
-    this.totalData.getFile().put(filehash, file);
+
+    synchronized(this) {
+      this.totalData.getFile().put(filehash, file);
+    }
 
     byte[] com = new byte[12];
     System.arraycopy("Load".getBytes(), 0, com, 0, "Load".getBytes().length);
@@ -395,7 +614,6 @@ public class Server implements Serverable{
       buffer1.put(com);
       buffer1.flip();
       this.channel.send(buffer1, socketAddress);
-      Thread.sleep(500);
     }catch (Exception e) {
       e.printStackTrace();
       System.out.println("send_mess出错");
@@ -403,9 +621,10 @@ public class Server implements Serverable{
 
 
     TransferData t = new TransferData(TransferState.ShareDownload,file);
-    this.totalData.getTransferList().add(t);
-    loadFile load = new loadFile(PORT,socketAddress,filename,t);
-    PORT++;
+    synchronized(this) {
+      this.totalData.getTransferList().add(t);
+    }
+    loadFile load = new loadFile(8080,socketAddress,filename,t);
     //运行下载文件线程
 
     load.run();
@@ -431,7 +650,7 @@ public class Server implements Serverable{
    * @param socketAddress
    * @param infor
    */
-  private void reply6(SocketAddress socketAddress, byte[] infor) {
+  private void reply6(byte[] infor) {
     int length = infor.length + 12;
     int number = length/35; //计算节点个数.
 
@@ -455,7 +674,9 @@ public class Server implements Serverable{
         nodes = new ArrayList<InternetNode>();
         nodes.add(node);
 
-        this.totalData.getK_bucket().put(distance, nodes);
+        synchronized(this) {
+          this.totalData.getK_bucket().put(distance, nodes);
+        }
       } else {
         boolean flag = false;
         for (InternetNode n : nodes) {
@@ -466,7 +687,9 @@ public class Server implements Serverable{
         }
 
         if (!flag) {
-          this.totalData.getK_bucket().get(distance).add(node);
+          synchronized(this) {
+            this.totalData.getK_bucket().get(distance).add(node);
+          }
         }
       }
 
@@ -476,6 +699,12 @@ public class Server implements Serverable{
 
 
 
+  /**
+   * 计算距离.
+   * @param id1
+   * @param id2
+   * @return
+   */
   private int distance(byte[] id1, byte[] id2) {
     if (id1 == null || id2 == null || id1.length != id2.length) {
       System.out.println("节点id错误");

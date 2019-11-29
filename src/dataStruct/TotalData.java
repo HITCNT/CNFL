@@ -17,7 +17,9 @@ public class TotalData {
   private List<TransferData> SharedList;        //当前已分享表，主程序展示使用，由客户端写入
 
   private Map<byte[],FileData> File = new HashMap<byte[],FileData>(); //储存文件条目
-  private Map<Integer,List<InternetNode>> K_bucket = new HashMap<Integer,List<InternetNode>>();
+  private Map<Integer,List<InternetNode>> K_bucket = new HashMap<Integer,List<InternetNode>>();//K-bucket
+
+  private Map<byte[],List<InternetNode>> FileInNode = new HashMap<byte[],List<InternetNode>>();
 
   public TotalData(byte[] id,List<TransferData> TransferList) {
     this.id=id;
@@ -42,5 +44,9 @@ public class TotalData {
 
   public Map<Integer,List<InternetNode>> getK_bucket() {
     return K_bucket;
+  }
+
+  public Map<byte[],List<InternetNode>> getFileInNode() {
+    return FileInNode;
   }
 }
