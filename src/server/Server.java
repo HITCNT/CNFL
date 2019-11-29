@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -48,7 +49,7 @@ public class Server implements Serverable{
     id = totalData.getId();
     //初始化公网IP节点
     int distance = distance(id,new byte[id.length]);
-    InternetNode pubNode = new InternetNode(new byte[4],"49.232.146.5","8080"); //需修改
+    InternetNode pubNode = new InternetNode(new byte[4],"49.232.146.5","8080");
     List<InternetNode> nodeList = new ArrayList<InternetNode>();
     nodeList.add(pubNode);
     this.totalData.getK_bucket().put(distance, nodeList);
@@ -99,7 +100,7 @@ public class Server implements Serverable{
         String order = new String(command,"UTF-8");
 
         if (order.equals("Ping")) {
-          reply1(socketAddress);
+          reply1(socketAddress,infor);
         } else if (order.equals("Find_Node")) {
           reply2(socketAddress,infor);
         } else if (order.equals("Find_Value")) {
@@ -120,10 +121,18 @@ public class Server implements Serverable{
 
   }
 
+  /**
+   * 更新K_bucket
+   */
   public  void upData() {
     int k = 5;
     Set<Integer> distance = this.totalData.getK_bucket().keySet();
 
+    if(addr.getHostAddress().equals("49.232.146.5")) {
+      if(distance == null) {
+        distance = new HashSet<Integer>();
+      }
+    }
 
     if (distance == null) {
       for (int i = 1; i <= k; i++) {
@@ -173,7 +182,10 @@ public class Server implements Serverable{
             e.printStackTrace();
           }
         } else {
-          updata1(count);
+          if (!addr.getHostAddress().equals("49.232.146.5")) {
+            updata1(count);
+          }
+
         }
 
         count++;
@@ -189,10 +201,12 @@ public class Server implements Serverable{
   private void updata1(int distance) {
     byte[] testid = new byte[4];
     for (int j = 0; j < 4; j++) {
-      if (j < distance) {
-        testid[j] = (byte)(this.id[j]^1);
+      if (j == 0) {
+        testid[j] = (byte)(this.id[j]^(2*(distance - 1) + 1));
+      } else {
+        testid[j] = this.id[j];
       }
-      testid[j] = this.id[j];
+
     }
 
     byte[] cmd = new byte[12];
@@ -248,8 +262,29 @@ public class Server implements Serverable{
    * 回复Ping指令
    * @param socketAddress
    */
-  private void reply1(SocketAddress socketAddress) {
+  private void reply1(SocketAddress socketAddress,byte[] infor) {
+    byte[] id = new byte[4];
+    byte[] ip = new byte[15];
+    byte[] port = new byte[4];
+    System.arraycopy(infor, 0, id, 0, 4);
+    System.arraycopy(ip, 4, ip, 0, 15);
+    System.arraycopy(id, 19, port, 0, 4);
+    InternetNode node1 = new InternetNode(id,new String(ip),new String(port));
+    if (addr.getHostAddress().equals("49.232.146.5")) {
+      int dis = distance(this.id,id);
+      List<InternetNode> nodes = this.totalData.getK_bucket().get(dis);
 
+      if (nodes == null) {
+        nodes = new ArrayList<InternetNode>();
+        nodes.add(node1);
+
+        synchronized(this) {
+          this.totalData.getK_bucket().put(dis, nodes);
+        }
+      } else {
+        this.totalData.getK_bucket().put(dis, nodes);
+      }
+    } 
     byte[] com = new byte[12];
     System.arraycopy("Alive".getBytes(), 0, com, 0, "Alive".getBytes().length);
     byte[] node = setNode(this.id,addr.getHostAddress().getBytes(),"8080".getBytes());
