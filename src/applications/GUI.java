@@ -18,11 +18,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -47,15 +44,11 @@ public class GUI {
   private JPanel uploadJPanel;
   private JPanel informationJPanel;
   private JScrollPane listJScrollPane;
-  private JList<FileData> uploadJList;
-  private JList<TransferData> transferJList;
+  
+  
 
-  private TotalData totalData;
-  private Serverable server;
-  private Clientable client;
-
-  private FileData aimedSearchFile = null;
-
+  
+  
   public GUI() {
     initProgram();
     uploadJList = new JList<FileData>();
@@ -163,60 +156,60 @@ public class GUI {
     totalData = new TotalData(getRandomID(), initTransferList, initFileList);
     server = Serverable.getServer(totalData);
     client = Clientable.getClient(totalData);
+    initJFrame();
   }
 
   private void initJFrame() {
     mainJFrame = new JFrame("基于DHT的P2P文件共享系统 2019秋 计算机网络");
     mainJFrame.setSize(800, 600);
     mainJFrame.setResizable(false);
-
+    
     initMainJPanel();
 
     mainJFrame.add(mainJPanel);
-
+    mainJFrame.setVisible(true);
 
   }
 
   private void initMainJPanel() {
-    mainJPanel = new JPanel();
+    mainJPanel=new JPanel();
     mainJPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-    mainJPanel.setLayout(new BorderLayout(10, 10));
-
+    mainJPanel.setLayout(new BorderLayout(10,10));
+    
     initJTabbedPane();
     initListJPanel();
-
-    mainJPanel.add(mainJTabbedPane, BorderLayout.CENTER);
-    mainJPanel.add(listJPanel, BorderLayout.EAST);
+    
+    mainJPanel.add(mainJTabbedPane,BorderLayout.CENTER);
+    mainJPanel.add(listJPanel,BorderLayout.EAST);
   }
-
+  
   private void initJTabbedPane() {
     mainJTabbedPane = new JTabbedPane();
-    mainJTabbedPane.setSize(600, 600);
-
+    mainJTabbedPane.setSize(600,600);
+    
     initDownloadJPanel();
     initUploadJPanel();
     initinformationJPanel();
-
+    
     mainJTabbedPane.add("资源搜索", downloadJPanel);
-    mainJTabbedPane.add("资源上传", uploadJPanel);
-    mainJTabbedPane.add("软件信息", informationJPanel);
+    mainJTabbedPane.add("资源上传",uploadJPanel);
+    mainJTabbedPane.add("软件信息",informationJPanel);
   }
-
+  
   private void initListJPanel() {
-    listJPanel = new JPanel();
-    listJPanel.setSize(200, 600);
-    listJPanel.setLayout(new BorderLayout(5, 5));
-
+    listJPanel=new JPanel();
+    listJPanel.setSize(200,600);
+    listJPanel.setLayout(new BorderLayout(5,5));
+    
     initListJScrollPane();
-
-
 
     listJPanel.add(new JLabel("传输列表"), BorderLayout.NORTH);
     listJPanel.add(listJScrollPane, BorderLayout.CENTER);
 
 
-  }
 
+  }
+  
   private void initDownloadJPanel() {
     JPanel searchJPanel = new JPanel();
     JScrollPane searchListJScrollPane = new JScrollPane();
@@ -343,9 +336,8 @@ public class GUI {
     downloadJPanel.add(searchListJScrollPane, BorderLayout.CENTER);
     downloadJPanel.add(searchJPanel, BorderLayout.NORTH);
     downloadJPanel.add(downloadingJPanel, BorderLayout.SOUTH);
-
   }
-
+  
   private void initUploadJPanel() {
     JPanel filePathJPanel = new JPanel();
     JScrollPane updatedListJScrollPane = new JScrollPane();
@@ -435,9 +427,8 @@ public class GUI {
 
     uploadJPanel.add(updatedListJScrollPane, BorderLayout.CENTER);
     uploadJPanel.add(filePathJPanel, BorderLayout.NORTH);
-
   }
-
+  
   private void initinformationJPanel() {
     informationJPanel = new JPanel();
     informationJPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -450,13 +441,13 @@ public class GUI {
     informationJPanel.add(new JLabel("1170300119 郭为"));
     informationJPanel.add(new JLabel("学号待填写 罗诚"));
     informationJPanel.add(new JLabel("学号待填写 张纬之"));
-  }
 
+  }
+  
   private void initListJScrollPane() {
-    listJScrollPane = new JScrollPane();
-    listJScrollPane.setPreferredSize(new Dimension(200, 600));
-
-    listJScrollPane.setViewportView(transferJList);
+    listJScrollPane=new JScrollPane();
+    listJScrollPane.setPreferredSize(new Dimension(200,600));
+    
   }
-
+  
 }
