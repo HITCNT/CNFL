@@ -79,7 +79,7 @@ public class GUI {
   }
 
   private byte[] getRandomID() {
-    byte[] id = new byte[20];
+    byte[] id = new byte[4];
     File data=new File("data");
     if(!data.exists()) {
       data.mkdir();
@@ -101,7 +101,7 @@ public class GUI {
     } else {
       try {
         BufferedReader reader = new BufferedReader(new FileReader(file));
-        String idX = reader.readLine();
+        String idX = reader.readLine(); 
         id=conver16HexToByte(idX);
         reader.close();
       } catch (FileNotFoundException e) {
