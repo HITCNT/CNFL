@@ -17,6 +17,8 @@ public class TotalData {
   private List<TransferData> TransferList;      //传输信息列表，主程序展示使用，由服务器和客户端写入，请注意线程安全
   private List<TransferData> SharedList=new ArrayList<TransferData>();        //当前已分享表，主程序展示使用，由客户端写入
 
+  private IPPort nextIP;
+  
   private Map<byte[],FileData> File = new HashMap<byte[],FileData>(); //储存文件条目
   private Map<Integer,List<InternetNode>> K_bucket = new HashMap<Integer,List<InternetNode>>();//K-bucket
 
@@ -49,5 +51,9 @@ public class TotalData {
 
   public Map<byte[],List<InternetNode>> getFileInNode() {
     return FileInNode;
+  }
+  
+  public IPPort getNextIP() {
+    return nextIP;
   }
 }

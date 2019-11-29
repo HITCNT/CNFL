@@ -64,7 +64,7 @@ public class GUI {
     transferJList = new JList<TransferData>();
     initJFrame();
     if (server != null) {
-      server.run();
+      new Thread(server).start();
     }
     Timer refreshTimer = new Timer();
     refreshTimer.schedule(new TimerTask() {
@@ -81,7 +81,7 @@ public class GUI {
   }
 
   private byte[] getRandomID() {
-    byte[] id = new byte[4];
+    byte[] id = new byte[20];
     File data=new File("data");
     if(!data.exists()) {
       data.mkdir();
