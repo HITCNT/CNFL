@@ -64,7 +64,7 @@ public class GUI {
     transferJList = new JList<TransferData>();
     initJFrame();
     if (server != null) {
-      server.run();
+      new Thread(server).start();
     }
     Timer refreshTimer = new Timer();
     refreshTimer.schedule(new TimerTask() {
