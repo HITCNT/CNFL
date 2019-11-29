@@ -18,8 +18,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -45,9 +48,15 @@ public class GUI {
   private JPanel informationJPanel;
   private JScrollPane listJScrollPane;
   
+  private Serverable server;
+  private Clientable client;
   
+  private JList<FileData> uploadJList;
+  private JList<TransferData> transferJList;
 
+  private TotalData totalData;
   
+  private FileData aimedSearchFile;
   
   public GUI() {
     initProgram();
@@ -130,7 +139,6 @@ public class GUI {
   
   private void initProgram() {
     List<TransferData> initTransferList = new ArrayList<TransferData>();
-    List<FileData> initFileList = new ArrayList<FileData>();
 
     // initTransferList.add(new
     // TransferData(TransferState.TransferDownload, new
@@ -153,10 +161,9 @@ public class GUI {
 
 
 
-    totalData = new TotalData(getRandomID(), initTransferList, initFileList);
+    totalData = new TotalData(getRandomID(), initTransferList);
     server = Serverable.getServer(totalData);
     client = Clientable.getClient(totalData);
-    initJFrame();
   }
 
   private void initJFrame() {

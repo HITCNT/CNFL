@@ -20,7 +20,7 @@ public interface Clientable {
    * @return 客户机对象
    */
   public static Clientable getClient(TotalData totalData) {
-    return null;
+    return new Client(totalData);
   }
   
   /**

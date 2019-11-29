@@ -1,5 +1,6 @@
 package dataStruct;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +15,7 @@ import java.util.Map;
 public class TotalData {
   private byte[] id;                            //客户端ID，首次运行随机生成，由主程序负责生成和加载
   private List<TransferData> TransferList;      //传输信息列表，主程序展示使用，由服务器和客户端写入，请注意线程安全
-  private List<TransferData> SharedList;        //当前已分享表，主程序展示使用，由客户端写入
+  private List<TransferData> SharedList=new ArrayList<TransferData>();        //当前已分享表，主程序展示使用，由客户端写入
 
   private Map<byte[],FileData> File = new HashMap<byte[],FileData>(); //储存文件条目
   private Map<Integer,List<InternetNode>> K_bucket = new HashMap<Integer,List<InternetNode>>();//K-bucket

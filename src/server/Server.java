@@ -112,7 +112,7 @@ public class Server implements Serverable{
           reply6(infor);
         }
 
-        TimeTask tt = new TimeTask(this);
+        new TimeTask(this);
       }
     }catch (Exception e) {
       e.printStackTrace();

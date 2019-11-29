@@ -18,6 +18,6 @@ public interface Serverable extends Runnable {
    * @return 服务器对象
    */
   public static Serverable getServer(TotalData totalData) {
-    return null;
+    return new Server(totalData);
   }
 }
