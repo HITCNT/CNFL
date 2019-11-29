@@ -209,7 +209,7 @@ public class Server implements Serverable{
     try {
       ByteBuffer buffer1 = ByteBuffer.allocate(1024);
       buffer1.put(message);
-      buffer1.flip();
+      buffer1.flip(); 
       this.channel.send(buffer1, socketaddress);
     }catch (Exception e) {
       e.printStackTrace();
